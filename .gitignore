@@ -1,0 +1,8 @@
+vendor/
+go-cli-starter
+dist/
+go-carpet-coverage-out*
+release/
+filesbydate
+filesbysize
+
