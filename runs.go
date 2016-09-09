@@ -39,3 +39,46 @@ func Detect(things []interface{}, mapper func(interface{}) int64, belongs func(a
 
 	return clusters
 }
+
+// GroupVisitor marks a group visitor that is put into a walker. Use this
+// as a guide to implement your own visitors.
+// For example:
+//		type GroupPrinter struct {
+//		}
+//
+//		func (g *GroupPrinter) VisitHeader(group interface{}) {
+//			groupName := fmt.Sprintf("group_%s", group.(os.FileInfo).Name())
+//			fmt.Printf("%s\n", groupName)
+//		}
+//
+//		func (g *GroupPrinter) VisitNode(i int, sz int, header interface{}, file interface{}) {
+//			fi := file.(os.FileInfo)
+//			if i == sz-1 {
+//				fmt.Printf("└── ")
+//			} else {
+//				fmt.Printf("├── ")
+//			}
+//			fmt.Printf("%s (%v)\n", fi.Name(), fi.ModTime())
+//		}
+type GroupVisitor interface {
+	VisitHeader(interface{})
+	VisitNode(int, int, interface{}, interface{})
+}
+
+// GroupWalker is a group walker implementation into which you provide a visitor.
+type GroupWalker struct {
+}
+
+// Walk will walk a group given your custom visitor.
+// For example:
+//  printer := &GroupWalker{}
+//  printer.Walk(grouped, &GroupPrinter{})
+func (g *GroupWalker) Walk(grouped map[int64][]interface{}, visitor GroupVisitor) {
+	for _, group := range grouped {
+		visitor.VisitHeader(group[0])
+		groupSize := len(group)
+		for i, file := range group {
+			visitor.VisitNode(i, groupSize, group[0], file)
+		}
+	}
+}
